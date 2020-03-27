@@ -12,20 +12,20 @@ import (
 
 func GetValue(ctx context.Context, req *demo_proto.Request) (*demo_proto.Response, error) {
 	client := transport.NewClient(
-		"GET", &url.URL{ /*...*/ },
+		"POST", &url.URL{ /*...*/ },
 		transport.EncodeJSONRequest,
 		func(_ context.Context, r *http.Response) (interface{}, error) { return nil, nil },
 		transport.SetClient(apmhttp.WrapClient(http.DefaultClient)),
-	)
+	).Endpoint()
 
 	tx := apm.DefaultTracer.StartTransaction("name", "type")
 	ctx = apm.ContextWithTransaction(ctx, tx)
 	defer tx.End()
 
-	_, err := client.Endpoint()(ctx, struct{}{})
+	resp, err := client(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return resp.(*demo_proto.Response), nil
 }

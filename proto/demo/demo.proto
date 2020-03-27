@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package demo.proto;
+
+service Demo {
+    rpc GetValue (Request) returns (Response) {
+    }
+}
+
+message Request {
+    string rep = 1;
+}
+
+message Response {
+    string resp = 1;
+}

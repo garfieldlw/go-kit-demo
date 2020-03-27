@@ -2,36 +2,30 @@ package http
 
 import (
 	"context"
-	"flag"
 	"github.com/garfieldlw/go-kit-demo/proto/demo"
-	transport "github.com/go-kit/kit/transport/grpc"
-	"google.golang.org/grpc"
-	"log"
-	"time"
+	transport "github.com/go-kit/kit/transport/http"
+	"go.elastic.co/apm"
+	"go.elastic.co/apm/module/apmhttp"
+	"net/http"
+	"net/url"
 )
 
-func GetValue(ctx context.Context, req *demo_proto.Request) (resp *demo_proto.Response, err error) {
-	var (
-		grpcAddr = flag.String("addr", ":8081",
-			"gRPC address")
+func GetValue(ctx context.Context, req *demo_proto.Request) (*demo_proto.Response, error) {
+	client := transport.NewClient(
+		"GET", &url.URL{ /*...*/ },
+		transport.EncodeJSONRequest,
+		func(_ context.Context, r *http.Response) (interface{}, error) { return nil, nil },
+		transport.SetClient(apmhttp.WrapClient(http.DefaultClient)),
 	)
-	flag.Parse()
-	conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(),
-		grpc.WithTimeout(1*time.Second))
 
+	tx := apm.DefaultTracer.StartTransaction("name", "type")
+	ctx = apm.ContextWithTransaction(ctx, tx)
+	defer tx.End()
+
+	_, err := client.Endpoint()(ctx, struct{}{})
 	if err != nil {
-		log.Fatalln("gRPC dial:", err)
+		return nil, err
 	}
-	defer conn.Close()
 
-	var loremEndpoint = transport.NewClient(
-		conn, "Lorem", "Lorem",
-		lorem_grpc.EncodeGRPCLoremRequest,
-		lorem_grpc.DecodeGRPCLoremResponse,
-		pb.LoremResponse{},
-	).Endpoint()
-
-	return lorem_grpc.Endpoints{
-		LoremEndpoint: loremEndpoint,
-	}
+	return nil, nil
 }

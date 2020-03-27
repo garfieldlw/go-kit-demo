@@ -1,7 +1,8 @@
-package service
+package grpc
 
 import (
 	"context"
+	"github.com/garfieldlw/go-kit-demo/pages/service/demo/common"
 	"github.com/garfieldlw/go-kit-demo/proto/demo"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/transport/grpc"
@@ -42,8 +43,11 @@ func encodeResponse(_ context.Context, req interface{}) (interface{}, error) {
 func getValueEndpoint() endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*demo_proto.Request)
+
+		resp, _ := common.GetValue(ctx, req.Rep)
+
 		bl := new(demo_proto.Response)
-		bl.Resp = req.Rep + "!!!"
+		bl.Resp = resp
 		return bl, nil
 	}
 }

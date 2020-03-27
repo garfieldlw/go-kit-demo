@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	http2 "github.com/garfieldlw/go-kit-demo/pages/service/demo/http"
 	transport "github.com/go-kit/kit/transport/http"
+	"go.elastic.co/apm/module/apmhttp"
 	"net/http"
 )
 
 func LoadRouter() {
-	http.Handle("/demo", transport.NewServer(
+	http.Handle("/demo", apmhttp.Wrap(transport.NewServer(
 		http2.GetValueEndpoint(),
 		decodeRequest,
 		encodeResponse,
-	))
+	)))
 }
 
 func decodeRequest(_ context.Context, r *http.Request) (interface{}, error) {

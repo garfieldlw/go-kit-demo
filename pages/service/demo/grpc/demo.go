@@ -5,7 +5,10 @@ import (
 	"github.com/garfieldlw/go-kit-demo/pages/service/demo/common"
 	"github.com/garfieldlw/go-kit-demo/proto/demo"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/examples/addsvc/pkg/addendpoint"
+	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport/grpc"
+	"os"
 )
 
 type DemoService struct {
@@ -21,9 +24,11 @@ func (s *DemoService) GetValue(ctx context.Context, in *demo_proto.Request) (*de
 }
 
 func GetDomeService() *DemoService {
+	logger := log.NewLogfmtLogger(os.Stderr)
+
 	d := &DemoService{
 		GetValueHandler: grpc.NewServer(
-			getValueEndpoint(),
+			addendpoint.LoggingMiddleware(logger)(getValueEndpoint()),
 			decodeRequest,
 			encodeResponse,
 		),

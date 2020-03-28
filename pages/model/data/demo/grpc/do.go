@@ -4,11 +4,13 @@ import (
 	"context"
 	"flag"
 	"github.com/garfieldlw/go-kit-demo/proto/demo"
+	"github.com/go-kit/kit/examples/addsvc/pkg/addendpoint"
+	"github.com/go-kit/kit/log"
 	transport "github.com/go-kit/kit/transport/grpc"
 	"go.elastic.co/apm"
 	"go.elastic.co/apm/module/apmgrpc"
 	"google.golang.org/grpc"
-	"log"
+	"os"
 	"time"
 )
 
@@ -19,7 +21,7 @@ func GetValue(ctx context.Context, req *demo_proto.Request) (*demo_proto.Respons
 	conn, err := grpc.Dial(*addr, grpc.WithUnaryInterceptor(apmgrpc.NewUnaryClientInterceptor()), grpc.WithTimeout(1*time.Second))
 
 	if err != nil {
-		log.Fatalln("gRPC dial:", err)
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -27,12 +29,17 @@ func GetValue(ctx context.Context, req *demo_proto.Request) (*demo_proto.Respons
 	ctx = apm.ContextWithTransaction(ctx, tx)
 	defer tx.End()
 
-	resp, err := transport.NewClient(
+	ep := transport.NewClient(
 		conn, "demo", "demo",
 		decodeRequest,
 		encodeResponse,
 		demo_proto.Response{},
-	).Endpoint()(ctx, req)
+	).Endpoint()
+
+	logger := log.NewLogfmtLogger(os.Stderr)
+	ep = addendpoint.LoggingMiddleware(logger)(ep)
+
+	resp, err := ep(ctx, req)
 
 	if err != nil {
 		return nil, err

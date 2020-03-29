@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"github.com/garfieldlw/go-kit-demo/pages/service/demo/common"
 	"github.com/garfieldlw/go-kit-demo/proto/demo"
 	"github.com/go-kit/kit/endpoint"
@@ -20,6 +21,9 @@ func (s *DemoService) GetValue(ctx context.Context, in *demo_proto.Request) (*de
 	if err != nil {
 		return nil, err
 	}
+
+	//fmt.Println(status.Error(codes.Unauthenticated, "demo"))
+
 	return rsp.(*demo_proto.Response), err
 }
 
@@ -38,10 +42,14 @@ func GetDomeService() *DemoService {
 }
 
 func decodeRequest(_ context.Context, req interface{}) (interface{}, error) {
+	fmt.Println("--request--")
+	fmt.Println(req)
 	return req, nil
 }
 
 func encodeResponse(_ context.Context, req interface{}) (interface{}, error) {
+	fmt.Println("--response--")
+	fmt.Println(req)
 	return req, nil
 }
 
